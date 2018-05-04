@@ -10,32 +10,37 @@ logging.basicConfig(level=logging.DEBUG,
                     )
 
 
-class TempSensor(Thread):
+class ChargeChecker(Thread):
 
-    def __init__(self, lock):
+    def __init__(self):
         Thread.__init__(self)
-        self.temp = random.randint(-10, 50)
+        self.charge = random.randint(0, 100)
         logging.debug(' Sensor Activated')
 
     def run(self):
         time.sleep(random.randint(1, 10))
         lock.acquire()
-        logging.debug('Acquired lock. Temperature:' + str(self.temp))
-        temperature.append(self.temp)
+        logging.debug('Acquired lock. Charge:' + str(self.charge))
+        charge_list.append(self.charge)
+        mean = sum(charge_list) / len(charge_list)
+
+        if mean < 30:
+            logging.debug('System needs more energy. Mean' + str(mean))
+        else:
+            logging.debug('System has enough energy. Mean' + str(mean))
+
         logging.debug('Lock released')
         lock.release()
 
 
 lock = threading.Lock()
 threads = []
-temperature = []
+charge_list = []
 
 for x in range(4):
-    newthread = TempSensor(lock)
+    newthread = ChargeChecker()
     threads.append(newthread)
     newthread.start()
 
 for x in threads:
     newthread.join()
-
-print temperature
